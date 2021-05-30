@@ -17,12 +17,19 @@ class Imzml:
         self.binSize = bin_size
         if self.filename.split('.')[-1] == "imzML":
             self.imzml = self.readImzml()
+            self.min_mz = self.imzml.getspectrum(0)[0].min()
+            self.max_mz = self.imzml.getspectrum(0)[0].max()
             self.cols = self.imzml.imzmldict["max count of pixels x"]
             self.rows = self.imzml.imzmldict["max count of pixels y"]
-            self.imzml_array = self.convertImzml2Array(600,601)
+            self.imzml_array = self.convertImzml2Array(min_mz=self.min_mz, max_mz=self.max_mz)
+
         elif self.filename.split('.')[-1] == "npy":
-            self.imzml_array = self.readImzmlArray()
-            self.rows, self.cols,_ = np.shape(self.imzml_array)
+            data = self.readImzmlArray()
+            self.min_mz = data['min_mz']
+            self.max_mz = data['max_mz']
+            self.imzml_array = data['imzml_array']
+            self.rows, self.cols, _ = np.shape(self.imzml_array)
+
         self.imzml_2d_array = self.create2dArray()
 
     def readImzml(self):
@@ -31,17 +38,26 @@ class Imzml:
     def readImzmlArray(self):
         return np.load(self.filename, allow_pickle=True)
 
+    def saveImzmldata(self, filename=None):
+        data = {'min_mz': self.min_mz, 'max_mz': self.max_mz, 'imzml_array': self.imzml_array}
+        np.save(filename, data)
+
     def convertImzml2Array(self, min_mz, max_mz):
         x_list = []
+        min_mz -= min_mz % self.binSize
+        max_mz -= max_mz % self.binSize
+        max_mz += self.binSize
+
         n_ch = int((max_mz-min_mz)/self.binSize)
-        X = np.zeros([self.rows, self.cols, n_ch]);
+        X = np.zeros([self.rows, self.cols, n_ch])
+
         for i, (x,y, z) in enumerate(self.imzml.coordinates):
             mzA, intA = self.imzml.getspectrum(i)
             current_bin = 600
             Y = {}
             for j, mz in enumerate(mzA):
-                if mz >= max_mz:
-                    break;
+                if mz > max_mz:
+                    break
                 elif current_bin + self.binSize <= mz:
                     current_bin += self.binSize
                 mz = current_bin
