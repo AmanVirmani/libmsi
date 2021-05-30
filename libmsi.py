@@ -19,10 +19,10 @@ class Imzml:
             self.imzml = self.readImzml()
             self.cols = self.imzml.imzmldict["max count of pixels x"]
             self.rows = self.imzml.imzmldict["max count of pixels y"]
-            self.imzml_array = self.convertImzml2Array()
-        elif self.filename.split('.')[-1] == ".npy":
+            self.imzml_array = self.convertImzml2Array(600,601)
+        elif self.filename.split('.')[-1] == "npy":
             self.imzml_array = self.readImzmlArray()
-            self.rows, self.cols = np.shape(self.imzml_array)
+            self.rows, self.cols,_ = np.shape(self.imzml_array)
         self.imzml_2d_array = self.create2dArray()
 
     def readImzml(self):
@@ -31,32 +31,30 @@ class Imzml:
     def readImzmlArray(self):
         return np.load(self.filename, allow_pickle=True)
 
-    def convertImzml2Array(self):
+    def convertImzml2Array(self, min_mz, max_mz):
         x_list = []
-        # bins = np.arange(600,20001,3)
-        X = np.zeros([self.rows, self.cols, 7]);
-        Y = {}
+        n_ch = int((max_mz-min_mz)/self.binSize)
+        X = np.zeros([self.rows, self.cols, n_ch]);
         for i, (x,y, z) in enumerate(self.imzml.coordinates):
             mzA, intA = self.imzml.getspectrum(i)
             current_bin = 600
+            Y = {}
             for j, mz in enumerate(mzA):
-                # TODO: convert based on specific bin size
-                if current_bin<= mz and mz < current_bin+self.binSize:
-                    mz = current_bin
-                    if mz in Y.keys():
-                        if Y[mz] < intA[j]:
-                            Y[mz] = intA[j]
-                    else:
+                if mz >= max_mz:
+                    break;
+                elif current_bin + self.binSize <= mz:
+                    current_bin += self.binSize
+                mz = current_bin
+                if mz in Y.keys():
+                    if Y[mz] < intA[j]:
                         Y[mz] = intA[j]
                 else:
-                    current_bin += self.binSize;
+                    Y[mz] = intA[j]
             X[y-1,x-1] = pd.DataFrame([Y]).values;
-            # x_list.append(Y)
-        # x = pd.DataFrame(x_list).values
         return X
 
     def create2dArray(self):
-        return self.imzml_array[~np.all(self.imzml_array == 0, axis=1)]
+        return self.imzml_array[~np.all(self.imzml_array == 0, axis=-1)]
 
     # Dimensionality Reduction
     def performPCA(self, n_components=15):
