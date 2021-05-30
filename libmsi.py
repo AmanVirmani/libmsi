@@ -72,6 +72,23 @@ class Imzml:
         return X_train_ica, X_projected
 
     # Visualization
+    def plotMSI(self, mz, filename=None):
+        plt.imshow(self.imzml_array[:, :, mz]).set_interpolation('nearest')
+        plt.colorbar()
+        plt.title('MS image for ' + str(mz) + ' mz value')
+        if filename is None:
+            plt.show()
+        else:
+            plt.savefig(filename)
+
+    def plotSpectra(self, index, filename=None):
+        plt.plot(self.imzml_2d_array[index],'b-')
+        plt.title('MS spectra at ' + str(index) + 'index ')
+        if filename is None:
+            plt.show()
+        else:
+            plt.savefig(filename)
+
     def plotTSNE(self, X_projected, n_components=2):
         X_embedded = TSNE(n_components=2).fit_transform(X_projected)
         plt.plot(X_embedded[:, 0], X_embedded[:, 1], 'b.')
