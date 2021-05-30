@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA, FastICA
 from sklearn.manifold import TSNE
 import pandas as pd
 import random
-
+from tqdm import tqdm
 
 class Imzml:
 
@@ -51,7 +51,8 @@ class Imzml:
         n_ch = int((max_mz-min_mz)/self.binSize)
         X = np.zeros([self.rows, self.cols, n_ch])
 
-        for i, (x,y, z) in enumerate(self.imzml.coordinates):
+        print('\nConverting imzml format to binned 3d array with binSize' + str(self.binSize)+'\n')
+        for i, (x,y, z) in enumerate(tqdm(self.imzml.coordinates)):
             mzA, intA = self.imzml.getspectrum(i)
             current_bin = 600
             Y = {}
