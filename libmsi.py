@@ -124,9 +124,23 @@ class Imzml:
 
         data = []
         delta = 1e-3;
-        for th in range(X_min, X_max):
-            if 1-np.sum(X < th)/X.size < delta:
+        #
+        th = int((X_min + X_max)/2)
+        while(True):
+            if 1 - np.sum(X < th) / X.size < delta:
+                new_th = (X_min + th)/2
+                X_max = th
+            else:
+                new_th = (th + X_max)/2
+                X_min = th
+            if th == int(new_th):
                 break
+            else:
+                th = int(new_th)
+
+        # for th in range(X_min, X_max):
+        #     if 1-np.sum(X < th)/X.size < delta:
+        #         break
 
         X[X < th] = 0
         for i in range(len(X)):
