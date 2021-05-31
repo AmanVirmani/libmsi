@@ -25,9 +25,9 @@ class Imzml:
 
         elif self.filename.split('.')[-1] == "npy":
             data = self.readImzmlArray()
-            self.min_mz = data['min_mz']
-            self.max_mz = data['max_mz']
-            self.imzml_array = data['imzml_array']
+            self.min_mz = data[()]['min_mz']
+            self.max_mz = data[()]['max_mz']
+            self.imzml_array = data[()]['imzml_array']
             self.rows, self.cols, _ = np.shape(self.imzml_array)
 
         self.imzml_2d_array = self.create2dArray()
