@@ -76,15 +76,15 @@ class Imzml:
     # Dimensionality Reduction
     def performPCA(self, n_components=15):
         pca = PCA(n_components=n_components)
-        pca.fit(self.imzml_array)
-        X_train_pca = pca.transform(self.imzml_array)
+        pca.fit(self.imzml_2d_array)
+        X_train_pca = pca.transform(self.imzml_2d_array)
         X_projected = pca.inverse_transform(X_train_pca)
         return X_train_pca, X_projected
 
     def performICA(self, n_components=15):
         ica = FastICA(n_components=n_components, random_state=0)
-        ica.fit(self.imzml_array)
-        X_train_ica = ica.transform(self.imzml_array)
+        ica.fit(self.imzml_2d_array)
+        X_train_ica = ica.transform(self.imzml_2d_array)
         X_projected = ica.inverse_transform(X_train_ica)
         return X_train_ica, X_projected
 
