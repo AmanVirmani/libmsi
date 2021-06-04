@@ -4,7 +4,7 @@ from pyimzml.ImzMLParser import getionimage
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA, FastICA
+from sklearn.decomposition import PCA, FastICA, NMF
 from sklearn.manifold import TSNE
 import pandas as pd
 import random
@@ -75,18 +75,22 @@ class Imzml:
 
     # Dimensionality Reduction
     def performPCA(self, n_components=15):
-        pca = PCA(n_components=n_components)
-        pca.fit(self.imzml_2d_array)
-        X_train_pca = pca.transform(self.imzml_2d_array)
-        X_projected = pca.inverse_transform(X_train_pca)
+        self.pca = PCA(n_components=n_components)
+        X_train_pca = self.pca.fit_transform(self.imzml_2d_array)
+        X_projected = self.pca.inverse_transform(X_train_pca)
         return X_train_pca, X_projected
 
     def performICA(self, n_components=15):
-        ica = FastICA(n_components=n_components, random_state=0)
-        ica.fit(self.imzml_2d_array)
-        X_train_ica = ica.transform(self.imzml_2d_array)
-        X_projected = ica.inverse_transform(X_train_ica)
+        self.ica = FastICA(n_components=n_components, random_state=0)
+        X_train_ica = self.ica.fit_transform(self.imzml_2d_array)
+        X_projected = self.ica.inverse_transform(X_train_ica)
         return X_train_ica, X_projected
+
+    def performNMF(self, n_components=15):
+        self.nmf = NMF(n_components=n_components, init='random', random_state=0)
+        X_train_nmf = self.nmf.fit_transform(self.imzml_2d_array)
+        X_projected = self.nmf.inverse_transform(X_train_nmf)
+        return X_train_nmf, X_projected
 
     # Visualization
     def plotMSI(self, mz, filename=None):
