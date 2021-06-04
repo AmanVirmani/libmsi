@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA, FastICA
 from sklearn.manifold import TSNE
 import pandas as pd
 import random
-from tqdm import tqdm
+from tqdm import tqdm,trange
 
 class Imzml:
 
@@ -90,6 +90,7 @@ class Imzml:
 
     # Visualization
     def plotMSI(self, mz, filename=None):
+        plt.figure()
         plt.imshow(self.imzml_array[:, :, mz]).set_interpolation('nearest')
         plt.colorbar()
         plt.title('MS image for ' + str(mz) + ' mz value')
@@ -97,6 +98,7 @@ class Imzml:
             plt.show()
         else:
             plt.savefig(filename)
+            plt.close()
 
     def plotSpectra(self, index, filename=None):
         plt.plot(self.imzml_2d_array[index],'b-')
@@ -105,36 +107,47 @@ class Imzml:
             plt.show()
         else:
             plt.savefig(filename)
+            plt.close()
 
-    def plotTSNE(self, X_projected, n_components=2):
+    def plotTSNE(self, X_projected, n_components=2, filename=None):
         X_embedded = TSNE(n_components=2).fit_transform(X_projected)
         plt.plot(X_embedded[:, 0], X_embedded[:, 1], 'b.')
         plt.title('TSNE Visualization in 2D')
         # can choose to comment this and do: plt.savefig(filename)
-        plt.show()
+        if filename is None:
+            plt.show()
+        else:
+            plt.savefig(filename)
+            plt.close()
         return X_embedded
 
-    def plotSpectraReprojected(self, X, X_reprojected):
+    def plotSpectraReprojected(self, X, X_reprojected,filename=None):
         for i in random.sample(range(len(X_reprojected)), 100):
             f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
             ax1.plot(X[i], 'b-')
             ax1.set_title('original')
             ax2.plot(X_reprojected[i], 'r-')
             ax2.set_title('projected')
-            # plt.savefig('./results/spectra/dmsi_ica15_spectra_{:03d}'.format(i))
-            plt.show()
+            if filename is None:
+                plt.show()
+            else:
+                plt.savefig(filename)
+                plt.close()
 
-    def plotMSIReprojection(self, X_3d, X_projected_3d, mz):
+    def plotMSIReprojection(self, X_3d, X_projected_3d, mz, filename = None):
         f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
         ax1.imshow(X_3d[:,:,mz]).set_interpolation('nearest')
         ax1.set_title('Original MSI')
         ax2.imshow(X_projected_3d[:, :, mz]).set_interpolation('nearest')
         ax2.set_title('Reconstructed MSI')
-        # plt.savefig('./results/dmsi_ica15_reconstruction_{:03d}'.format(mz))
-        plt.show()
+        if filename is None:
+            plt.show()
+        else:
+            plt.savefig(filename)
+            plt.close()
 
     # Peak Processing
-    def get_peaks(self ):
+    def get_peaks(self, filename = None):
         X = self.imzml_2d_array.copy()
         X_max = int(X.max() + 0.5)
         X_min = int(X.min())
@@ -160,9 +173,15 @@ class Imzml:
         #         break
 
         X[X < th] = 0
-        for i in range(len(X)):
+        print('Plotting peaks for '+ self.filename.split('/')[-1] +'......')
+        plt.figure()
+        for i in trange(len(X)):
             plt.plot(X[i, :], 'b')
             # data.append([i, X])
         # data = np.array(data)
-        plt.show()
+        if filename is None:
+            plt.show()
+        else:
+            plt.savefig(filename)
+            plt.close()
         return X
