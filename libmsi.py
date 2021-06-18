@@ -82,6 +82,13 @@ class Imzml:
            x_3d[y-1, x-1] = x_2d[i]
         return x_3d
 
+    def normalize_data(self, method='TIC'):
+        if method == 'TIC':
+            for (x, y, z) in self.coordinates:
+                tic = sum(self.imzml_array[y-1, x-1])
+                self.imzml_array[y-1, x-1] /= tic
+        self.imzml_2d_array = self.create2dArray()
+
     # Dimensionality Reduction
     def performPCA(self, n_components=15):
         self.pca = PCA(n_components=n_components)
