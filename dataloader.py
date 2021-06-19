@@ -1,3 +1,12 @@
+"""@package dataloader
+This module is designed to load and process multiple msi datasets.
+
+Capabilities:
+1. Preprocessing: Binning and Normalization
+2. Dimensionality Reduction (PCA/ICA/NMF)
+3. Clustering (KMeans)
+"""
+
 import libmsi
 import random
 import numpy as np
@@ -8,40 +17,73 @@ from sklearn.cluster import KMeans
 
 
 class DataLoader:
+    """
+    @brief DataLoader class is designed to load and process mulitple msi datasets
+    """
     def __init__(self, filenames=[]):
+        """
+        @brief DataLoader class constructor
+        @param filenames list of filenames of the datasets
+        """
         self.filenames = filenames
         self.files = self.load_files()
         self.preprocess('TIC')
         self.train_data, self.val_data = self.data_split()
 
     def load_files(self):
+        """
+        @brief method to load the datasets
+        """
         files = []
         for file in self.filenames:
             files.append(libmsi.Imzml(file, 1))
         return files
 
     def data_split(self, split_ratio=0.75):
+        """
+        @brief method to split the data into training and validation set
+        @param split_ratio ratio of the length of training data and validation data
+        @return train_data list of Imzml objects for the training data
+        @return val_data list of Imzml objects for the validation data
+        """
         random.shuffle(self.files)
         train_data = self.files[:int(split_ratio * len(self.files))]
         val_data = self.files[int(split_ratio * len(self.files)):]
         return train_data, val_data
 
     def preprocess(self, normalization='TIC'):
+        """
+        @brief method to preprocess the data
+        @param normalization normalization method to be used
+        """
         for file in self.files:
             file.normalize_data(method=normalization)
 
     # Dimensionality Reduction
     def perform_pca(self, n_components=15):
+        """
+        @brief method to perform pca on all datasets together
+        @param n_components no. of components to keep
+        """
         self.pca = PCA(n_components=n_components)
         data = np.vstack([file.imzml_2d_array for file in self.train_data])
         self.pca.fit(data)
 
     def perform_ica(self, n_components=15):
+        """
+        @brief method to perform ica on all datasets together
+        @param n_components no. of components to keep
+        """
         self.ica = FastICA(n_components=n_components, random_state=0)
         data = np.vstack([file.imzml_2d_array for file in self.train_data])
         self.ica.fit(data)
 
     def perform_nmf(self, n_components=15, type='all'):
+        """
+        @brief method to perform nmf on all datasets together
+        @param n_components no. of components to keep
+        @param type string value 'all' for combined data, 'each' for individual data
+        """
         data_list = []
         if type == 'all':
             self.nmf = NMF(n_components=n_components, init='random', random_state=0, max_iter=20000)
@@ -56,6 +98,11 @@ class DataLoader:
 
 
     def perform_kmeans(self, data_list, n_clusters = 3):
+        """
+        @brief method to perform k means clustering
+        @param data_list list of data sets to cluster
+        @param n_clusters number of clusters to identify
+        """
         labels_list = []
         for data in data_list:
             labels = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(data)
@@ -63,6 +110,12 @@ class DataLoader:
         return labels_list
 
     def plot_clusters(self, data_list, labels_list, fn_prefix='cph_'):
+        """
+        @brief method to plot the identified clusters
+        @param data_list list of datasets to plot
+        @param labels_list list of labels in the same order as datasets
+        @param fn_prefix prefix to the filename to save the cluster plot
+        """
         colors = ['red', 'green', 'blue']
         for i, (data, labels) in enumerate(zip(data_list, labels_list)):
             fig = plt.figure(figsize=(8, 8))
@@ -78,6 +131,11 @@ class DataLoader:
             pass
 
     def plot_cluster_reprojection(self, labels_lists, fn_prefix='cph_'):
+        """
+        @brief method to plot the reprojection images of the clusters in reduced dimesions
+        @param labels_lists list of labels for each dataset
+        @param fn_prefix prefix to the filename to save the cluster plot reprojection
+        """
         for i, labels in enumerate(labels_lists):
             plt.figure()
             N = max(labels) + 1
