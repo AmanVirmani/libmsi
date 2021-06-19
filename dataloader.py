@@ -77,7 +77,30 @@ class DataLoader:
             # plt.show()
             pass
 
+    def plot_cluster_reprojection(self, labels_lists, fn_prefix='cph_'):
+        for i, labels in enumerate(labels_lists):
+            plt.figure()
+            N = max(labels) + 1
+            coords = np.array(self.files[i].coordinates)[:, 0:2] - 1  # subtracted 1 because python indexes start
+            n_rows = self.files[i].rows
+            n_cols = self.files[i].cols
+            im_frame = np.zeros((n_rows, n_cols))
+            for temp in range(len(coords)):
+                im_frame[coords[temp][1], coords[temp][0]] = labels[temp]
 
+            cmap = plt.cm.jet
+            # extract all colors from the .jet map
+            cmaplist = [cmap(i) for i in range(cmap.N)]
+            # create the new map
+            cmap = cmap.from_list('Custom cmap', cmaplist, cmap.N)
+
+            # define the bins and normalize
+            bounds = np.linspace(0, N, N + 1)
+            norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+            im = plt.imshow(im_frame, cmap=cmap)
+            cb = plt.colorbar(im, spacing='proportional', ticks=bounds)
+            plt.savefig(fn_prefix+'cluster_reprojection_' + str(i) + '.png')
 
 if __name__=='__main__':
    cph_filenames = ['./dmsi0008.npy', './dmsi0011.npy']
@@ -85,11 +108,13 @@ if __name__=='__main__':
    cph_loader = DataLoader(cph_filenames)
    naive_loader = DataLoader(naive_filenames)
 
-   cph_data_list = cph_loader.perform_nmf(n_components=20, type='each')
+   cph_data_list = cph_loader.perform_nmf(n_components=2, type='each')
    cph_labels_list = cph_loader.perform_kmeans(cph_data_list, 3)
-   cph_loader.plot_clusters(cph_data_list, cph_labels_list, 'cph_20')
+   # cph_loader.plot_clusters(cph_data_list, cph_labels_list, 'cph_20')
+   cph_loader.plot_cluster_reprojection(cph_labels_list, 'cph_')
 
-   naive_data_list = naive_loader.perform_nmf(n_components=20, type='each')
+   naive_data_list = naive_loader.perform_nmf(n_components=2, type='each')
    naive_labels_list = naive_loader.perform_kmeans(naive_data_list, 3)
-   naive_loader.plot_clusters(naive_data_list, naive_labels_list, 'naive_20')
+   # naive_loader.plot_clusters(naive_data_list, naive_labels_list, 'naive_20')
+   naive_loader.plot_cluster_reprojection(naive_labels_list, 'naive_')
    pass
