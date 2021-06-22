@@ -83,6 +83,7 @@ class DataLoader:
         @brief method to perform nmf on all datasets together
         @param n_components no. of components to keep
         @param type string value 'all' for combined data, 'each' for individual data
+        @return data_list list of datasets in reduced dimensional space
         """
         data_list = []
         if type == 'all':
@@ -102,6 +103,7 @@ class DataLoader:
         @brief method to perform k means clustering
         @param data_list list of data sets to cluster
         @param n_clusters number of clusters to identify
+        @return cluster_list list of cluster labels and centroids for each dataset
         """
         cluster_list = []
         for data in data_list:
@@ -113,7 +115,7 @@ class DataLoader:
         """
         @brief method to plot the identified clusters
         @param data_list list of datasets to plot
-        @param labels_list list of labels in the same order as datasets
+        @param cluster_list list of cluster labels and centroids for each dataset
         @param fn_prefix prefix to the filename to save the cluster plot
         """
         colors = ['red', 'green', 'blue']
@@ -130,13 +132,13 @@ class DataLoader:
             # plt.show()
             pass
 
-    def plot_cluster_reprojection(self, cluster_lists, fn_prefix='cph_'):
+    def plot_cluster_reprojection(self, cluster_list, fn_prefix='cph_'):
         """
         @brief method to plot the reprojection images of the clusters in reduced dimesions
-        @param labels_lists list of labels for each dataset
+        @param cluster_list list of cluster labels and centroids for each dataset
         @param fn_prefix prefix to the filename to save the cluster plot reprojection
         """
-        for i, cluster_dict in enumerate(cluster_lists):
+        for i, cluster_dict in enumerate(cluster_list):
             fig, axes = plt.subplots(2, 2)
             N = max(cluster_dict['labels']) + 1
             coords = np.array(self.files[i].coordinates)[:, 0:2] - 1  # subtracted 1 because python indexes start
