@@ -103,13 +103,13 @@ class DataLoader:
         @param data_list list of data sets to cluster
         @param n_clusters number of clusters to identify
         """
-        labels_list = []
+        cluster_list = []
         for data in data_list:
-            labels = KMeans(n_clusters=n_clusters, random_state=0).fit_predict(data)
-            labels_list.append(labels)
-        return labels_list
+            kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(data)
+            cluster_list.append({'labels': kmeans.labels_, 'clusters': kmeans.cluster_centers_})
+        return cluster_list
 
-    def plot_clusters(self, data_list, labels_list, fn_prefix='cph_'):
+    def plot_clusters(self, data_list, cluster_list, fn_prefix='cph_'):
         """
         @brief method to plot the identified clusters
         @param data_list list of datasets to plot
@@ -117,9 +117,9 @@ class DataLoader:
         @param fn_prefix prefix to the filename to save the cluster plot
         """
         colors = ['red', 'green', 'blue']
-        for i, (data, labels) in enumerate(zip(data_list, labels_list)):
+        for i, (data, cluster_dict) in enumerate(zip(data_list, cluster_list)):
             fig = plt.figure(figsize=(8, 8))
-            plt.scatter(data[:, 0], data[:, 1], c=labels, cmap=matplotlib.colors.ListedColormap(colors))
+            plt.scatter(data[:, 0], data[:, 1], c=cluster_dict['labels'], cmap=matplotlib.colors.ListedColormap(colors))
             cb = plt.colorbar()
             loc = np.arange(0, max(labels), max(labels)/float(len(colors)))
             cb.set_ticks(loc)
@@ -130,21 +130,21 @@ class DataLoader:
             # plt.show()
             pass
 
-    def plot_cluster_reprojection(self, labels_lists, fn_prefix='cph_'):
+    def plot_cluster_reprojection(self, cluster_lists, fn_prefix='cph_'):
         """
         @brief method to plot the reprojection images of the clusters in reduced dimesions
         @param labels_lists list of labels for each dataset
         @param fn_prefix prefix to the filename to save the cluster plot reprojection
         """
-        for i, labels in enumerate(labels_lists):
-            plt.figure()
-            N = max(labels) + 1
+        for i, cluster_dict in enumerate(cluster_lists):
+            fig, axes = plt.subplots(2, 2)
+            N = max(cluster_dict['labels']) + 1
             coords = np.array(self.files[i].coordinates)[:, 0:2] - 1  # subtracted 1 because python indexes start
             n_rows = self.files[i].rows
             n_cols = self.files[i].cols
             im_frame = np.zeros((n_rows, n_cols))
             for temp in range(len(coords)):
-                im_frame[coords[temp][1], coords[temp][0]] = labels[temp]
+                im_frame[coords[temp][1], coords[temp][0]] = cluster_dict['labels'][temp]
 
             cmap = plt.cm.jet
             # extract all colors from the .jet map
@@ -156,8 +156,12 @@ class DataLoader:
             bounds = np.linspace(0, N, N + 1)
             norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-            im = plt.imshow(im_frame, cmap=cmap)
-            cb = plt.colorbar(im, spacing='proportional', ticks=bounds)
+            im = axes[0, 0].imshow(im_frame, cmap=cmap)
+            cb = fig.colorbar(im, ax=axes[0, 0], spacing='proportional', ticks=bounds)
+            cluster_mean_spectra = cluster_dict['clusters'].dot(self.files[i].nmf.components_)
+            axes[0, 1].plot(cluster_mean_spectra[0], 'b-')
+            axes[1, 0].plot(cluster_mean_spectra[1], 'g-')
+            axes[1, 1].plot(cluster_mean_spectra[2], 'r-')
             plt.savefig(fn_prefix+'cluster_reprojection_' + str(i) + '.png')
 
 if __name__=='__main__':
@@ -169,10 +173,10 @@ if __name__=='__main__':
    cph_data_list = cph_loader.perform_nmf(n_components=2, type='each')
    cph_labels_list = cph_loader.perform_kmeans(cph_data_list, 3)
    # cph_loader.plot_clusters(cph_data_list, cph_labels_list, 'cph_20')
-   cph_loader.plot_cluster_reprojection(cph_labels_list, 'cph_')
+   cph_loader.plot_cluster_reprojection(cph_labels_list, 'cph_test_')
 
-   naive_data_list = naive_loader.perform_nmf(n_components=2, type='each')
-   naive_labels_list = naive_loader.perform_kmeans(naive_data_list, 3)
-   # naive_loader.plot_clusters(naive_data_list, naive_labels_list, 'naive_20')
-   naive_loader.plot_cluster_reprojection(naive_labels_list, 'naive_')
+   # naive_data_list = naive_loader.perform_nmf(n_components=2, type='each')
+   # naive_labels_list = naive_loader.perform_kmeans(naive_data_list, 3)
+   # # naive_loader.plot_clusters(naive_data_list, naive_labels_list, 'naive_20')
+   # naive_loader.plot_cluster_reprojection(naive_labels_list, 'naive_')
    pass
