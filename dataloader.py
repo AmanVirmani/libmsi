@@ -111,6 +111,19 @@ class DataLoader:
             cluster_list.append({'labels': kmeans.labels_, 'clusters': kmeans.cluster_centers_})
         return cluster_list
 
+    def align_clusters(self, cluster_lists):
+        n_means = len(cluster_lists[0]['clusters'])
+        data =np.vstack([cluster_lists[i]['clusters'] for i in range(len(cluster_lists))])
+        km = KMeans(n_clusters=n_means, random_state=0).fit(data)
+        for i in range(len(cluster_lists)):
+            # first fix the cluster means
+            cluster_lists[i]['clusters'] = cluster_lists[i]['clusters'][km.labels_[n_means*i:n_means*(i+1)]]
+            temp = cluster_lists[i]['labels'].copy()
+            for j in range(n_means):
+                cluster_lists[i]['labels'][temp == (np.where(km.labels_[n_means*i:n_means*(i+1)] == j))[0]] = j #km.labels_[n_means*i+j]
+        return cluster_lists
+
+
     def plot_clusters(self, data_list, cluster_list, fn_prefix='cph_'):
         """
         @brief method to plot the identified clusters
@@ -123,7 +136,7 @@ class DataLoader:
             fig = plt.figure(figsize=(8, 8))
             plt.scatter(data[:, 0], data[:, 1], c=cluster_dict['labels'], cmap=matplotlib.colors.ListedColormap(colors))
             cb = plt.colorbar()
-            loc = np.arange(0, max(labels), max(labels)/float(len(colors)))
+            loc = np.arange(0, max(cluster_dict['labels']), max(cluster_dict['labels'])/float(len(colors)))
             cb.set_ticks(loc)
             cb.set_ticklabels(colors)
             plt.xlim(0, 0.1)
@@ -173,12 +186,28 @@ if __name__=='__main__':
    naive_loader = DataLoader(naive_filenames)
 
    cph_data_list = cph_loader.perform_nmf(n_components=2, type='each')
-   cph_labels_list = cph_loader.perform_kmeans(cph_data_list, 3)
-   # cph_loader.plot_clusters(cph_data_list, cph_labels_list, 'cph_20')
-   cph_loader.plot_cluster_reprojection(cph_labels_list, 'cph_test_')
+   cph_cluster_list = cph_loader.perform_kmeans(cph_data_list, 3)
+   cph_cluster_list = cph_loader.align_clusters(cph_cluster_list)
 
-   # naive_data_list = naive_loader.perform_nmf(n_components=2, type='each')
-   # naive_labels_list = naive_loader.perform_kmeans(naive_data_list, 3)
+   cph_loader.plot_clusters(cph_data_list, cph_cluster_list, 'cph_2')
+   cph_loader.plot_cluster_reprojection(cph_cluster_list, 'cph_test_')
+   cluster_mean_spectra = cph_cluster_list[0]['clusters'].dot(cph_loader.files[0].nmf.components_)
+   plt.plot(cluster_mean_spectra[0], cluster_mean_spectra[1], 'b.')
+   plt.savefig('cph_mean_spectra_0.jpg')
+   cluster_mean_spectra = cph_cluster_list[1]['clusters'].dot(cph_loader.files[1].nmf.components_)
+   plt.plot(cluster_mean_spectra[0], cluster_mean_spectra[1], 'b.')
+   plt.savefig('cph_mean_spectra_1.jpg')
+
+   naive_data_list = naive_loader.perform_nmf(n_components=2, type='each')
+   naive_cluster_list = naive_loader.perform_kmeans(naive_data_list, 3)
    # # naive_loader.plot_clusters(naive_data_list, naive_labels_list, 'naive_20')
    # naive_loader.plot_cluster_reprojection(naive_labels_list, 'naive_')
+   cluster_mean_spectra = naive_cluster_list[0]['clusters'].dot(naive_loader.files[0].nmf.components_)
+   plt.plot(cluster_mean_spectra[0], cluster_mean_spectra[1], 'b.')
+   plt.savefig('naive_mean_spectra_0.jpg')
+   cluster_mean_spectra = naive_cluster_list[1]['clusters'].dot(naive_loader.files[1].nmf.components_)
+   plt.plot(cluster_mean_spectra[0], cluster_mean_spectra[1], 'b.')
+   plt.savefig('naive_mean_spectra_1.jpg')
+
+   naive_loader.files[0].performTSNE(naive_data_list[0], filename='TSNE_naive_0.jpg')
    pass
