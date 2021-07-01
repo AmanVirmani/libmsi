@@ -112,6 +112,11 @@ class DataLoader:
         return cluster_list
 
     def align_clusters(self, cluster_lists):
+        """
+        @brief method to align indexes of the identified clusters
+        @param cluster_lists list of cluster labels and centroids for each dataset
+        @return cluster_lists list of cluster labels and centroids for each dataset
+        """
         n_means = len(cluster_lists[0]['clusters'])
         data =np.vstack([cluster_lists[i]['clusters'] for i in range(len(cluster_lists))])
         km = KMeans(n_clusters=n_means, random_state=0).fit(data)
