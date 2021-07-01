@@ -117,10 +117,12 @@ class DataLoader:
         km = KMeans(n_clusters=n_means, random_state=0).fit(data)
         for i in range(len(cluster_lists)):
             # first fix the cluster means
-            cluster_lists[i]['clusters'] = cluster_lists[i]['clusters'][km.labels_[n_means*i:n_means*(i+1)]]
-            temp = cluster_lists[i]['labels'].copy()
+            clusters = np.empty_like(cluster_lists[i]['clusters'])
+            labels = cluster_lists[i]['labels'].copy()
             for j in range(n_means):
-                cluster_lists[i]['labels'][temp == (np.where(km.labels_[n_means*i:n_means*(i+1)] == j))[0]] = j #km.labels_[n_means*i+j]
+                clusters[km.labels_[n_means*i+j]] = cluster_lists[i]['clusters'][j]
+                cluster_lists[i]['labels'][labels == j] = km.labels_[n_means*i+j]
+            cluster_lists[i]['clusters'] = clusters
         return cluster_lists
 
 
