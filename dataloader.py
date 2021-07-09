@@ -20,7 +20,7 @@ class DataLoader:
     """
     @brief DataLoader class is designed to load and process mulitple msi datasets
     """
-    def __init__(self, filenames=[]):
+    def __init__(self, filenames=[], split_ratio=0.75):
         """
         @brief DataLoader class constructor
         @param filenames list of filenames of the datasets
@@ -28,7 +28,7 @@ class DataLoader:
         self.filenames = filenames
         self.files = self.load_files()
         self.preprocess('TIC')
-        self.train_data, self.val_data = self.data_split()
+        self.train_data, self.val_data = self.data_split(split_ratio)
 
     def load_files(self):
         """
@@ -90,7 +90,11 @@ class DataLoader:
             self.nmf = NMF(n_components=n_components, init='random', random_state=0, max_iter=20000)
             data = np.vstack([file.imzml_2d_array for file in self.train_data])
             self.nmf.fit(data)
-            data_list.append(self.nmf.transform(data))
+            X_transformed = self.nmf.transform(data)
+            start_idx = 0
+            for i in range(len(self.train_data)):
+                data_list.append(X_transformed[start_idx:start_idx+ len(self.train_data[i])])
+                start_idx += len(self.train_data[i])
         elif type == 'each':
             for file in self.files:
                 X_projected, _ = file.performNMF(n_components=n_components)
@@ -189,10 +193,10 @@ class DataLoader:
 if __name__=='__main__':
    cph_filenames = ['./dmsi0008.npy', './dmsi0011.npy']
    naive_filenames = ['./dmsi0009.npy', './dmsi0012.npy']
-   cph_loader = DataLoader(cph_filenames)
-   naive_loader = DataLoader(naive_filenames)
+   cph_loader = DataLoader(cph_filenames, 1)
+   naive_loader = DataLoader(naive_filenames, 1)
 
-   cph_data_list = cph_loader.perform_nmf(n_components=2, type='each')
+   cph_data_list = cph_loader.perform_nmf(n_components=2, type='all')
    cph_cluster_list = cph_loader.perform_kmeans(cph_data_list, 3)
    cph_cluster_list = cph_loader.align_clusters(cph_cluster_list)
 
