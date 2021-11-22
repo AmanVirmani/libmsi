@@ -19,7 +19,7 @@ from sklearn.manifold import TSNE
 import pandas as pd
 import random
 from tqdm import tqdm, trange
-
+import pickle
 
 class Imzml:
     """
@@ -51,7 +51,17 @@ class Imzml:
             self.imzml_array = data[()]['imzml_array']
             self.rows, self.cols, _ = np.shape(self.imzml_array)
 
-        self.imzml_2d_array = self.create2dArray()
+        # elif self.filename.split('.')[-1] == "pickle":
+        else:
+            data = self.readImzmlArray()
+            self.coordinates = data['coordinates']
+            self.min_mz = data['min_mz']
+            self.max_mz = data['max_mz']
+            self.imzml_array = data['imzml_array'][:,:,:10000]
+            self.rows, self.cols, _ = np.shape(self.imzml_array)
+
+        # self.imzml_2d_array = self.create2dArray()
+        print('loaded ',self.filename)
 
     def readImzml(self):
         """
@@ -63,15 +73,26 @@ class Imzml:
         """
         @brief Method to read data in .npy format
         """
-        return np.load(self.filename, allow_pickle=True)
+        if "npy" in self.filename:
+            return np.load(self.filename, allow_pickle=True)
+        with open(self.filename, 'rb') as fh:
+            data = pickle.load(fh)
+        return data
 
-    def saveImzmldata(self, filename=None):
+    def saveImzmlData(self, filename=None):
         """
         @brief Method to save processed data in .npy format
         @param filename output filename to save the data in
         """
         data = {'min_mz': self.min_mz, 'max_mz': self.max_mz, 'imzml_array': self.imzml_array, 'coordinates': self.coordinates}
-        np.save(filename, data)
+        if filename is None:
+            filename = self.filename.replace('.imzML','_' +
+            str(self.binSize).replace('.','_')+ '.pickle')
+        # np.save(filename, data)
+        print('saving: ', filename)
+        with open(filename, 'wb') as fh:
+            pickle.dump(data, fh, pickle.HIGHEST_PROTOCOL)
+        print('saved: ', filename)
 
     def convertImzml2Array(self, min_mz, max_mz):
         """
@@ -129,9 +150,13 @@ class Imzml:
         """
         if method == 'TIC':
             for (x, y, z) in self.coordinates:
+                ## TODO update it to use 2d array for better runtimes
                 tic = sum(self.imzml_array[y-1, x-1])
+                if tic == 0:
+                    continue
                 self.imzml_array[y-1, x-1] /= tic
         self.imzml_2d_array = self.create2dArray()
+        # self.imzml_array = None
 
     # Dimensionality Reduction
     def performPCA(self, n_components=15):
