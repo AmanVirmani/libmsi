@@ -105,7 +105,7 @@ class data_preformatter_kp:
 
             np.save(folder_name+file_name, datagrid_store_dict, 'dtype=object')
 
-        self.datagrid_store_dict=datagrid_store_dict
+        self.datagrid_store_dict = datagrid_store_dict
         return datagrid_store_dict
 
     def image_patches_unrolled(self, saved_3d_datagrid_filename=None, reject_percentage=25, window_size=30, overlap=0, save_data=0, filename_prefix=''):
@@ -142,9 +142,9 @@ class data_preformatter_kp:
         if (saved_3d_datagrid_filename is not None) and (saved_3d_datagrid_filename != ''):
             datagrid_store_dict_recovered = np.load(saved_3d_datagrid_filename, allow_pickle=True)[()]
         else:
-            datagrid_store_dict_recovered = self.datagrid_store_dict
+            datagrid_store_dict_recovered = self.datagrid_store_dict.copy()
 
-        datagrid_store_recovered = datagrid_store_dict_recovered['datagrid_store']
+        datagrid_store_recovered = datagrid_store_dict_recovered['datagrid_store'].copy()
         num_dim_reduced_components = datagrid_store_recovered[0].shape[0]
         used_dim_reduction_technique = self.used_dim_reduction_technique
 
@@ -168,7 +168,7 @@ class data_preformatter_kp:
                 while (row_start <= num_rows - window_size - 1):
                     while (col_start <= num_cols - window_size - 1):
 
-                        temp1 = this_image[:, row_start:row_start + window_size, col_start:col_start + window_size]
+                        temp1 = this_image[:, row_start:row_start + window_size, col_start:col_start + window_size].copy()
                         labelled_data_patch_flattened = np.array([temp1.flatten()])
                         labelled_data_patch = temp1
                         col_start = col_start + window_size
