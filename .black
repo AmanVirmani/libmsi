@@ -1,0 +1,14 @@
+[tool.black]
+line-length = 79
+target-version = ['py38']
+exclude = ```
+(
+    /(
+        \.git
+    |   \.idea
+    |   \.vscode
+    |   \.idea
+    |   \.ipynb_checkpoints
+    )/
+)
+```

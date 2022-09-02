@@ -141,6 +141,10 @@ dmypy.json
 
 # vscode 
 .vscode/
+*.code-workspace
+__pycache__
+*.swp
+
 
 # data and results
 results/
@@ -150,3 +154,4 @@ npy_files/
 *.pickle
 *.ipynb
 *.ipynb_checkpoints
+*.csv
