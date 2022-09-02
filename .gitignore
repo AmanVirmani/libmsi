@@ -155,3 +155,5 @@ npy_files/
 *.ipynb
 *.ipynb_checkpoints
 *.csv
+*.svg
+*.py_bkp
