@@ -4,6 +4,12 @@ __pycache__/
 *$py.class
 *.idea
 
+# redundant files
+*.png
+*.npy
+html/
+latex/
+
 # C extensions
 *.so
 
@@ -128,3 +134,26 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# temp files
+*.swp
+*.swo
+
+# vscode 
+.vscode/
+*.code-workspace
+__pycache__
+*.swp
+
+
+# data and results
+results/
+npy_files/
+*.png
+*.jpg
+*.pickle
+*.ipynb
+*.ipynb_checkpoints
+*.csv
+*.svg
+*.py_bkp
